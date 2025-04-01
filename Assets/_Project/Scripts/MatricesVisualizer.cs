@@ -108,17 +108,18 @@ public class MatricesVisualizer : MonoBehaviour
             {
                 var spaceMatrix = _spaceMatrices[j];
                 
-                // Проверяем ориентацию (должна быть одинаковой)
-                Vector3 modelForward = modelMatrix.GetColumn(2);
-                Vector3 modelUp = modelMatrix.GetColumn(1);
-                Vector3 spaceForward = spaceMatrix.GetColumn(2);
-                Vector3 spaceUp = spaceMatrix.GetColumn(1);
-                
-                float forwardDot = Vector3.Dot(modelForward, spaceForward);
-                float upDot = Vector3.Dot(modelUp, spaceUp);
-                
-                // Если ориентации совпадают (с учетом небольшой погрешности)
-                if (forwardDot > 0.99f && upDot > 0.99f)
+                // Получаем нормализованные вектора направлений
+                Vector3 modelForward = modelMatrix.GetColumn(2).normalized;
+                Vector3 modelUp = modelMatrix.GetColumn(1).normalized;
+                Vector3 spaceForward = spaceMatrix.GetColumn(2).normalized;
+                Vector3 spaceUp = spaceMatrix.GetColumn(1).normalized;
+
+                // Вычисляем разницу между векторами
+                float forwardDiff = (modelForward - spaceForward).magnitude;
+                float upDiff = (modelUp - spaceUp).magnitude;
+
+                // Если разница мала (например, меньше 0.1), считаем ориентации совпадающими
+                if (forwardDiff < 0.1f && upDiff < 0.1f)
                 {
                     // Вычисляем потенциальное смещение
                     Vector3 offset = new Vector3(
@@ -129,19 +130,17 @@ public class MatricesVisualizer : MonoBehaviour
                     
                     // Добавляем в текущие офсеты
                     currentOffsets.Add(offset);
-                    Debug.Log($"  Match found with space matrix {j}" +
+                    Debug.Log($"  Match found with space matrix {j} " +
                               $"(Position({spaceMatrix.m03}, {spaceMatrix.m13}, {spaceMatrix.m23}))");
                     // Debug.Log($"  Orientation match: Forward dot = {forwardDot:F3}, Up dot = {upDot:F3}");
                     Debug.Log($"  Calculated offset: ({offset.x:F3}, {offset.y:F3}, {offset.z:F3})");
                 }
-                // else
-                // {
-                //     // Для отладки, показываем только некоторые неудачные сравнения, чтобы не засорять лог
-                //     if (j % 10 == 0)
-                //     {
-                //         Debug.Log($"  No orientation match with space matrix {j}: Forward dot = {forwardDot:F3}, Up dot = {upDot:F3}");
-                //     }
-                // }
+                else
+                {
+                    // Для отладки, показываем неудачные сравнения
+                    // Debug.Log($"  No orientation match with space matrix {j}: " +
+                    //           $"forwardDiff={forwardDiff:F3}, upDiff={upDiff:F3}");
+                }
             }
             
             Debug.Log($"Found {currentOffsets.Count} potential offsets for model matrix {i}");

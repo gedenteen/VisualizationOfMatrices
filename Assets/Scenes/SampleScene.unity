@@ -151,7 +151,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 702c970867d2ba94baaf8fbd66c594de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _delayInSeconds: 0.00001
   _holderForCubes: {fileID: 1433614359}
   _modelJson: {fileID: 4900000, guid: c3b9bd1c8a13004498bfcfcc916bb685, type: 3}
   _spaceJson: {fileID: 4900000, guid: f807069b941ba2948a380c2542367143, type: 3}
