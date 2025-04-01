@@ -1,8 +1,12 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class MatricesVisualizer : MonoBehaviour
 {
+    // [Header("References to other objects")]
+    // [SerializeField] private float _delayInSeconds = 0.1f;
+    
     [Header("References to other objects")]
     [SerializeField] private Transform _holderForCubes;
     
@@ -15,12 +19,16 @@ public class MatricesVisualizer : MonoBehaviour
 
     private List<Matrix4x4> _modelMatrices;
     private List<Matrix4x4> _spaceMatrices;
+    private List<CubeController> _cubesOfModel;
 
     void Start()
     {
         ParseJsons();
-        VisualizeMatrices(_modelMatrices, _materialForModel);
-        VisualizeMatrices(_spaceMatrices, _materialForSpace);
+        _cubesOfModel = new List<CubeController>(_modelMatrices.Count);
+        // _cubesOfModel.Capacity = _modelMatrices.Count;
+        
+        CreateCubes(_modelMatrices, _materialForModel, _cubesOfModel);
+        CreateCubes(_spaceMatrices, _materialForSpace, null);
     }
 
     private void ParseJsons()
@@ -52,18 +60,32 @@ public class MatricesVisualizer : MonoBehaviour
                   _spaceMatrices[0].ToString());
     }
     
-    private void VisualizeMatrices(List<Matrix4x4> matrices, Material material)
+    private void CreateCubes(List<Matrix4x4> matrices, Material material, 
+        List<CubeController> listOfCubeControllers)
     {
-        foreach (var matrice in matrices)
+        foreach (var matrix in matrices)
         {
             CubeController cubeController = Instantiate(_prefabCubeController, _holderForCubes);
-            cubeController.transform.position = new Vector3(matrice.m03, matrice.m13, matrice.m23);
+            cubeController.transform.position = new Vector3(matrix.m03, matrix.m13, matrix.m23);
             cubeController.transform.rotation = Quaternion.LookRotation(
-                matrice.GetColumn(2), matrice.GetColumn(1));
+                matrix.GetColumn(2), matrix.GetColumn(1));
             cubeController.SetMaterial(material);
+
+            if (listOfCubeControllers != null)
+            {
+                listOfCubeControllers.Add(cubeController);
+            }
         }
         
-        Debug.Log("MatricesVisualizer: VisualizeMatrices: " +
+        Debug.Log("MatricesVisualizer: CreateCubes: " +
                   $"Created {matrices.Count} cubes");
+    }
+
+    private void DeactivateAllCubesOfModel()
+    {
+        foreach (var cubeController in _cubesOfModel)
+        {
+            cubeController.gameObject.SetActive(false);
+        }
     }
 }
