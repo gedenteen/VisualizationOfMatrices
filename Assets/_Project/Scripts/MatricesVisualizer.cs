@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class MatricesVisualizer : MonoBehaviour
 {
-    // [Header("References to other objects")]
-    // [SerializeField] private float _delayInSeconds = 0.1f;
+    [Header("References to other objects")]
+    [SerializeField] private float _delayInSeconds = 0.001f;
     
     [Header("References to other objects")]
     [SerializeField] private Transform _holderForCubes;
@@ -29,8 +29,6 @@ public class MatricesVisualizer : MonoBehaviour
         
         CreateCubes(_modelMatrices, _materialForModel, _cubesOfModel);
         CreateCubes(_spaceMatrices, _materialForSpace, null);
-
-        FindPossibleOffsets();
     }
 
     private void ParseJsons()
@@ -83,50 +81,21 @@ public class MatricesVisualizer : MonoBehaviour
                   $"Created {matrices.Count} cubes");
     }
 
-    public void FindPossibleOffsets()
+    private void DeactivateAllCubesOfModel()
     {
-        if (_modelMatrices.Count == 0)
+        for (int i = 0; i < _cubesOfModel.Count; i++)
         {
-            Debug.Log($"MatricesVisualizer: FindPossibleOffsets: No model matrices available");
-            return;
+            _cubesOfModel[i].gameObject.SetActive(false);
         }
-        List<Matrix4x4> possibleOffsets = new List<Matrix4x4>();
-    
-        Matrix4x4 baseModel = _modelMatrices[0];
-        Matrix4x4 invBase = baseModel.inverse;
-    
-        for (int i = 0; i < _spaceMatrices.Count; i++)
-        {
-            Matrix4x4 spaceMatrix = _spaceMatrices[i];
-            Matrix4x4 candidateOffset = spaceMatrix * invBase;
-            bool valid = true;
-            int j = 0;
-        
-            for ( ; j < _modelMatrices.Count; j++)
-            {
-                Matrix4x4 modelMatrix = _modelMatrices[j];
-                Matrix4x4 result = candidateOffset * modelMatrix;
-                if (!ContainsMatrix(_spaceMatrices, result, 0.001f))
-                {
-                    valid = false;
-                    break;
-                }
-            }
-        
-            if (valid)
-            {
-                // Debug.Log($"MatricesVisualizer: FindPossibleOffsets: found valid offset, i={i}, j={j}");
-                possibleOffsets.Add(candidateOffset);
-            }
-        
-            // Debug.Log($"MatricesVisualizer: FindPossibleOffsets: end of iteration, i={i}, j={j}");
-        }
-    
-        Debug.Log($"MatricesVisualizer: FindPossibleOffsets: Found {possibleOffsets.Count} valid offsets");
-        foreach (var offset in possibleOffsets)
-        {
-            Debug.Log($"MatricesVisualizer: FindPossibleOffsets: Offset:\n{offset}");
-        }
+    }
+
+    private void ChangePositionAndActivateCubeOfModel(int index, Matrix4x4 matrix)
+    {
+        CubeController cube = _cubesOfModel[index];
+        cube.transform.position = new Vector3(matrix.m03, matrix.m13, matrix.m23);
+        cube.transform.rotation = Quaternion.LookRotation(
+            matrix.GetColumn(2), matrix.GetColumn(1));
+        cube.gameObject.SetActive(true);
     }
 
     private bool ContainsMatrix(List<Matrix4x4> matrices, Matrix4x4 target, 
@@ -156,5 +125,63 @@ public class MatricesVisualizer : MonoBehaviour
             }
         }
         return true;
+    }
+
+    public async UniTask FindPossibleOffsets(bool withVisualization)
+    {
+        if (_modelMatrices.Count == 0)
+        {
+            Debug.Log($"MatricesVisualizer: FindPossibleOffsets: No model matrices available");
+            return;
+        }
+        List<Matrix4x4> possibleOffsets = new List<Matrix4x4>();
+    
+        Matrix4x4 baseModel = _modelMatrices[0];
+        Matrix4x4 invBase = baseModel.inverse;
+    
+        for (int i = 0; i < _spaceMatrices.Count; i++)
+        {
+            Matrix4x4 spaceMatrix = _spaceMatrices[i];
+            Matrix4x4 candidateOffset = spaceMatrix * invBase;
+            bool valid = true;
+            int j = 0;
+
+            if (withVisualization)
+            {
+                DeactivateAllCubesOfModel();
+            }
+        
+            for ( ; j < _modelMatrices.Count; j++)
+            {
+                Matrix4x4 modelMatrix = _modelMatrices[j];
+                Matrix4x4 result = candidateOffset * modelMatrix;
+
+                if (withVisualization)
+                {
+                    ChangePositionAndActivateCubeOfModel(j, result);
+                    await UniTask.WaitForSeconds(_delayInSeconds);
+                }
+
+                if (!ContainsMatrix(_spaceMatrices, result, 0.001f))
+                {
+                    valid = false;
+                    break;
+                }
+            }
+        
+            if (valid)
+            {
+                // Debug.Log($"MatricesVisualizer: FindPossibleOffsets: found valid offset, i={i}, j={j}");
+                possibleOffsets.Add(candidateOffset);
+            }
+        
+            // Debug.Log($"MatricesVisualizer: FindPossibleOffsets: end of iteration, i={i}, j={j}");
+        }
+    
+        Debug.Log($"MatricesVisualizer: FindPossibleOffsets: Found {possibleOffsets.Count} valid offsets");
+        foreach (var offset in possibleOffsets)
+        {
+            Debug.Log($"MatricesVisualizer: FindPossibleOffsets: Offset:\n{offset}");
+        }
     }
 }
