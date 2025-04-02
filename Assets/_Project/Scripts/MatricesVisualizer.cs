@@ -50,13 +50,13 @@ public class MatricesVisualizer : MonoBehaviour
         }
 
         // Debug        
-        Debug.Log("MatricesVisualizator: ParseJsons: Model count = " + 
+        Debug.Log("MatricesVisualizer: ParseJsons: Model count = " + 
                   _modelMatrices.Count);
-        Debug.Log("MatricesVisualizator: ParseJsons: Space count = " + 
+        Debug.Log("MatricesVisualizer: ParseJsons: Space count = " + 
                   _spaceMatrices.Count);
-        // Debug.Log("MatricesVisualizator: ParseJsons: _modelMatrices[0]:\n" +
+        // Debug.Log("MatricesVisualizer: ParseJsons: _modelMatrices[0]:\n" +
         //           _modelMatrices[0].ToString());
-        // Debug.Log("MatricesVisualizator: ParseJsons: _spaceMatrices[0]:\n" +
+        // Debug.Log("MatricesVisualizer: ParseJsons: _spaceMatrices[0]:\n" +
         //           _spaceMatrices[0].ToString());
     }
     
@@ -182,6 +182,11 @@ public class MatricesVisualizer : MonoBehaviour
         foreach (var offset in possibleOffsets)
         {
             Debug.Log($"MatricesVisualizer: FindPossibleOffsets: Offset:\n{offset}");
+        }
+
+        if (possibleOffsets.Count > 0)
+        {
+            JsonHelper.SavePossibleOffsetsToFile(possibleOffsets);
         }
     }
 }
