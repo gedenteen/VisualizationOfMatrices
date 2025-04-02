@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class MatricesVisualizer : MonoBehaviour
 {
-    [Header("References to other objects")]
+    [Header("Parameters")]
     [SerializeField] private float _delayInSeconds = 0.001f;
+    [SerializeField] private float _tolerance = 0.001f;
     
     [Header("References to other objects")]
     [SerializeField] private Transform _holderForCubes;
@@ -25,7 +26,6 @@ public class MatricesVisualizer : MonoBehaviour
     {
         ParseJsons();
         _cubesOfModel = new List<CubeController>(_modelMatrices.Count);
-        // _cubesOfModel.Capacity = _modelMatrices.Count;
         
         CreateCubes(_modelMatrices, _materialForModel, _cubesOfModel);
         CreateCubes(_spaceMatrices, _materialForSpace, null);
@@ -162,7 +162,7 @@ public class MatricesVisualizer : MonoBehaviour
                     await UniTask.WaitForSeconds(_delayInSeconds);
                 }
 
-                if (!ContainsMatrix(_spaceMatrices, result, 0.001f))
+                if (!ContainsMatrix(_spaceMatrices, result, _tolerance))
                 {
                     valid = false;
                     break;
@@ -179,10 +179,10 @@ public class MatricesVisualizer : MonoBehaviour
         }
     
         Debug.Log($"MatricesVisualizer: FindPossibleOffsets: Found {possibleOffsets.Count} valid offsets");
-        foreach (var offset in possibleOffsets)
-        {
-            Debug.Log($"MatricesVisualizer: FindPossibleOffsets: Offset:\n{offset}");
-        }
+        // foreach (var offset in possibleOffsets)
+        // {
+        //     Debug.Log($"MatricesVisualizer: FindPossibleOffsets: Offset:\n{offset}");
+        // }
 
         if (possibleOffsets.Count > 0)
         {
